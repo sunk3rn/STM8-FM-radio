@@ -15,7 +15,7 @@ uint8_t message[5] = {0b00110001,0b01101001,0b00010000,0b00010010,0b01000000}; /
 uint8_t mute_flag = 0;
 uint16_t favorite_frequency = 0;
 
-void initialization (void){
+void initialization (void) {
 	GPIO_Init(GPIOC,GPIO_PIN_1,GPIO_MODE_IN_PU_NO_IT);
 	GPIO_Init(GPIOC,GPIO_PIN_4,GPIO_MODE_IN_PU_NO_IT);
 	GPIO_Init(GPIOC,GPIO_PIN_2,GPIO_MODE_IN_PU_NO_IT); //GREEN
@@ -28,19 +28,14 @@ void initialization (void){
 	swi2c_init();
 }
 
-uint16_t calculate_frequency ( uint16_t wanted_frequency)  
-{
+uint16_t calculate_frequency ( uint16_t wanted_frequency) {
 	uint32_t result;
 	result = (4 * ((wanted_frequency + 2) * 100000 + 225 * 1000)) / 32768;
-	if (result <= 16384 && result >= 0) {
-		return resutl;
-	}
-	else {
-		return 0;
-	}
+	if (result <= 16384 && result >= 0) return result;
+	else return 0;
 }
 
-void set_frequency(void){
+void set_frequency(void) {
 	converted_frequency = calculate_frequency(frequency);
 
 	//Prohodil jsem MSB a LSB, nevim co je spravne
@@ -57,7 +52,7 @@ void set_frequency(void){
 	swi2c_block_write(SLVADR,message,5);	
 }
 
-void refresh_lcd(void){
+void refresh_lcd(void) {
 	uint16_t output_frequency1 = frequency / 10;
 	uint16_t output_frequency2 = frequency % 10;
 	set_frequency();
