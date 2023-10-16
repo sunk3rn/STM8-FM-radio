@@ -38,7 +38,6 @@ uint16_t calculate_frequency ( uint16_t wanted_frequency) {
 void set_frequency(void) {
 	converted_frequency = calculate_frequency(frequency);
 
-	//Prohodil jsem MSB a LSB, nevim co je spravne
 	frequencyMSB = converted_frequency >> 8;
 	frequencyLSB = converted_frequency & 0xFF;
 	if (mute_flag == 1){
@@ -60,19 +59,14 @@ void refresh_lcd(void) {
 	lcd_gotoxy(0,0);
 	lcd_puts(text);
 	lcd_gotoxy(0,1);
-	if (mute_flag == 1){sprintf(text2,"Muted %d.%d MHz ",output_frequency1,output_frequency2);}
-	else{sprintf(text2,"     %d.%d MHz ",output_frequency1,output_frequency2);}
+	if (mute_flag == 1) sprintf(text2,"Muted %d.%d MHz ",output_frequency1,output_frequency2);
+	else sprintf(text2,"     %d.%d MHz ",output_frequency1,output_frequency2);
 	lcd_puts(text2);
 }
 
 #define SCAN_PERIOD 15 //Scanning period for buttons
 
 void scan_buttons(void);
-
- INTERRUPT_HANDLER(TIM2_UPD_OVF_BRK_IRQHandler, 13) {
-     /*Binec, ingorovat
-		*/
- }
 
 void main(void) {
 	inicializace();	
@@ -85,83 +79,63 @@ while(1) {
 	}
 }
 
-// po uplynutí každých SCAN_PERIOD skenuje stav tlačítka (tlačítek) a reaguje na stisk
 void scan_buttons(void) {
-	static uint16_t last_time=0; // kdy naposled jsme stav tlačítek skenovali
-	static bool last_button_status=1; // minuly stav tlačítka (0=stisk, 1=uvolněno)
-	if((milis() - last_time) > SCAN_PERIOD) { // pokud uplynul požadovaný čas, tak skenujeme stav tlačítek
-        last_time = milis(); // zapamatuj si kdy jsi skenoval stav tlačítek
-		// bylo tlačítko minule uvolněné a teď je stisknuté ?
-		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_1)==RESET && last_button_status==1) { 
-			last_button_status = 0; // zapamatuj si že teď je tlačítko stisknuté
-			// sem davej kod pro vykonani po zmacknuti:
+	static uint16_t last_time=0; 
+	static bool last_button_status=1; 
+	if((milis() - last_time) > SCAN_PERIOD) { 
+        last_time = milis();
+		
+		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_1) == RESET && last_button_status==1) { 
+			last_button_status = 0; 
 			frequency++;
-			if (frequency > 1080){
-			frequency = 875;}
+			if (frequency > 1080) frequency = 875;
 			refresh_lcd();
-			set_frequency();
-			
 		}
-		// pokud je tlačítko uvolněné, zapamatuj si to 
-		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_1)!=RESET){
+
+		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_1) != RESET){
 		last_button_status=1;
 		delay_ms(75);
 		}
 		
-		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_4)==RESET && last_button_status==1){ 
-			last_button_status = 0; // zapamatuj si že teď je tlačítko stisknuté
-			// sem davej kod pro vykonani po zmacknuti:
+		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_4) == RESET && last_button_status==1){ 
+			last_button_status = 0; 
 			frequency--;
-			if (frequency < 875){
-			frequency = 1080;}
+			if (frequency < 875) frequency = 1080;
 			refresh_lcd();
-			set_frequency();
-			
 		}
-		// pokud je tlačítko uvolněné, zapamatuj si to 
+
 		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_4)!=RESET) {
 			last_button_status=1;
 			delay_ms(75);
 		}
 		
-		if(GPIO_ReadInputPin(GPIOG,GPIO_PIN_0)==RESET && last_button_status==1) { 
-			last_button_status = 0; // zapamatuj si že teď je tlačítko stisknuté
-			// sem davej kod pro vykonani po zmacknuti:
+		if(GPIO_ReadInputPin(GPIOG,GPIO_PIN_0) == RESET && last_button_status==1) { 
+			last_button_status = 0; 
 			if (mute_flag){mute_flag = 0;}
 			else{mute_flag = 1;}
 			refresh_lcd();
-			set_frequency();
 			delay_ms(50);
-			
 		}
-		// pokud je tlačítko uvolněné, zapamatuj si to 
-		if(GPIO_ReadInputPin(GPIOG,GPIO_PIN_0)!=RESET) {
+
+		if(GPIO_ReadInputPin(GPIOG,GPIO_PIN_0) != RESET) {
 		last_button_status=1;
 		delay_ms(75);
 		}
 		
-		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_2)==RESET && last_button_status==1) { 
-			last_button_status = 0; // zapamatuj si že teď je tlačítko stisknuté
-			// sem davej kod pro vykonani po zmacknuti:
-			if (mute_flag == 1) {
-				favorite_frequency = frequency;
-			}
-			else {
-				frequency = oblibena_frequency;
-			}
+		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_2) == RESET && last_button_status==1) { 
+			last_button_status = 0; 
+			if (mute_flag == 1) favorite_frequency = frequency;
+			else frequency = oblibena_frequency;
 			refresh_lcd();
-			set_frequency();
-			
 		}
-		// pokud je tlačítko uvolněné, zapamatuj si to 
-		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_2)!=RESET) {
+		if(GPIO_ReadInputPin(GPIOC,GPIO_PIN_2) != RESET) {
 		last_button_status=1;
 		delay_ms(75);
 		}
 	}
 }
 
-// pod tímto komentářem nic neměňte 
+// Don't change anything under this comment
 #ifdef USE_FULL_ASSERT
 
 /**
